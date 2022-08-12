@@ -10,4 +10,4 @@ DEBUG = True
 
 
 '''TODO IMPLEMENT DATABASE URL'''
-SQLALCHEMY_DATABASE_URI = 'postgres+psycopg2://demo_user:password@localhost:5432/fyyur_db'
+SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://demo_user:password@localhost:5432/fyyur_db'
