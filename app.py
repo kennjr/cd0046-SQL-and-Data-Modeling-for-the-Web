@@ -1,6 +1,7 @@
 # ----------------------------------------------------------------------------#
 # Imports
 # ----------------------------------------------------------------------------#
+import sys
 
 import dateutil.parser
 import babel
@@ -103,7 +104,7 @@ def index():
 
 #  Venues
 #  ----------------------------------------------------------------
-
+# the method. below returns an obj if there's one with a matching key and value in the specified array
 def get_object(key, val, lis):
     return next((i for i, d in enumerate(lis) if d[key] == val), None)
 
@@ -247,32 +248,31 @@ def delete_venue(venue_id):
 #  ----------------------------------------------------------------
 @app.route('/artists')
 def artists():
-    # TODO: replace with real data returned from querying the database
-    data = [{
-        "id": 4,
-        "name": "Guns N Petals",
-    }, {
-        "id": 5,
-        "name": "Matt Quevedo",
-    }, {
-        "id": 6,
-        "name": "The Wild Sax Band",
-    }]
+    """# ODO: replace with real data returned from querying the database"""
+    # data = [{
+    #     "id": 4,
+    #     "name": "Guns N Petals",
+    # }, {
+    #     "id": 5,
+    #     "name": "Matt Quevedo",
+    # }, {
+    #     "id": 6,
+    #     "name": "The Wild Sax Band",
+    # }]
+    data = Artist.query.all()
     return render_template('pages/artists.html', artists=data)
 
 
 @app.route('/artists/search', methods=['POST'])
 def search_artists():
-    # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
+    # ODO: implement search on artists with partial string search. Ensure it is case-insensitive.
     # seach for "A" should return "Guns N Petals", "Matt Quevado", and "The Wild Sax Band".
     # search for "band" should return "The Wild Sax Band".
+    search_term = request.form.get('search_term')
+    data = Artist.query.filter(Artist.name.contains(search_term)).all()
     response = {
-        "count": 1,
-        "data": [{
-            "id": 4,
-            "name": "Guns N Petals",
-            "num_upcoming_shows": 0,
-        }]
+        "count": len(data),
+        "data": data
     }
     return render_template('pages/search_artists.html', results=response,
                            search_term=request.form.get('search_term', ''))
@@ -427,13 +427,41 @@ def create_artist_form():
 @app.route('/artists/create', methods=['POST'])
 def create_artist_submission():
     # called upon submitting the new artist listing form
-    # TODO: insert form data as a new Venue record in the db, instead
-    # TODO: modify data to be the data object returned from db insertion
+    # ODO: insert form data as a new Venue record in the db, instead
+    # ODO: modify data to be the data object returned from db insertion
+    try:
+        genres = request.form.get('genres')
+        name = request.form.get('name')
+        city = request.form.get('city')
+        state = request.form.get('state')
+        phone = request.form.get('phone')
+        image_link = request.form.get('image_link')
+        facebook_link = request.form.get('facebook_link')
+        website_link = request.form.get('website_link')
+        seeking_venue = request.form.get('seeking_venue')
+        seeking_description = request.form.get('seeking_description')
 
-    # on successful db insert, flash success
-    flash('Artist ' + request.form['name'] + ' was successfully listed!')
-    # TODO: on unsuccessful db insert, flash an error instead.
-    # e.g., flash('An error occurred. Artist ' + data.name + ' could not be listed.')
+        # converting the seeking_venue str val to a bool
+        if seeking_venue == 'y':
+            seeking_venue = True
+        else:
+            seeking_venue = False
+        # add the data to the server
+        artist_item = Artist(genres=genres, name=name, city=city, state=state, phone=phone, image_link=image_link,
+                             facebook_link=facebook_link, website_link=website_link, seeking_venues=seeking_venue,
+                             seeking_description=seeking_description)
+        db.session.add(artist_item)
+        db.session.commit()
+        # on successful db insert, flash success
+        flash('Artist ' + request.form['name'] + ' was successfully listed!')
+    except:
+        print(sys.exc_info())
+        db.session.rollback()
+        # on successful db insert, flash success
+        flash('An error occurred. Artist ' + request.form.get('name') + ' could not be listed.')
+    finally:
+        db.session.close()
+
     return render_template('pages/home.html')
 
 
