@@ -71,7 +71,7 @@ class Show(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), nullable=False)
     venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=False)
-    start_time = db.Column(db.String(60), nullable=False)
+    start_time = db.Column(db.DateTime(timezone=True), nullable=False)
 
 
 '''# TODO Implement Show and Artist models, and complete all model relationships and properties, as a database 
@@ -152,32 +152,30 @@ def show_venue(venue_id):
     '''
     ODO: replace with real venue data from the venues table, using venue_id
     '''
-    data1 = {
-        "id": 1,
-        "name": "The Musical Hop",
-        "genres": ["Jazz", "Reggae", "Swing", "Classical", "Folk"],
-        "address": "1015 Folsom Street",
-        "city": "San Francisco",
-        "state": "CA",
-        "phone": "123-123-1234",
-        "website": "https://www.themusicalhop.com",
-        "facebook_link": "https://www.facebook.com/TheMusicalHop",
-        "seeking_talent": True,
-        "seeking_description": "We are on the lookout for a local artist to play every two weeks. Please call us.",
-        "image_link": "https://images.unsplash.com/photo-1543900694-133f37abaaa5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=400&q=60",
-        "past_shows": [{
-            "artist_id": 4,
-            "artist_name": "Guns N Petals",
-            "artist_image_link": "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80",
-            "start_time": "2019-05-21T21:30:00.000Z"
-        }],
-        "upcoming_shows": [],
-        "past_shows_count": 1,
-        "upcoming_shows_count": 0,
-    }
+    current_date = format_datetime(str(datetime.today()))
+    past_shows = Show.query.filter(Show.start_time <= current_date).all()
+    upcoming_shows = Show.query.filter(Show.start_time <= current_date).all()
     # data = list(filter(lambda d: d['id'] == venue_id, [data1, data2, data3]))[0]
     data = Venue.query.filter_by(id=venue_id).first()
-    return render_template('pages/show_venue.html', venue=data)
+    response = {
+        "id": data.id,
+        "name": data.name,
+        "genres": data.genres,
+        "address": data.address,
+        "city": data.city,
+        "state": data.state,
+        "phone": data.phone,
+        "website": data.website_link,
+        "facebook_link": data.facebook_link,
+        "seeking_talent": data.seeking_talent,
+        "seeking_description": data.seeking_description,
+        "image_link": data.image_link,
+        "past_shows": past_shows,
+        "upcoming_shows": upcoming_shows,
+        "past_shows_count": len(past_shows),
+        "upcoming_shows_count": len(upcoming_shows),
+    }
+    return render_template('pages/show_venue.html', venue=response)
 
 
 #  Create Venue
