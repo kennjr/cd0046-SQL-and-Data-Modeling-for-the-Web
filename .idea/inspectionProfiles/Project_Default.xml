@@ -1,0 +1,38 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyUnresolvedReferencesInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredIdentifiers">
+        <list>
+          <option value="meetup.meet.models.Meetup.objects" />
+          <option value="el_galleria.models.Location.objects" />
+          <option value="el_galleria.models.Category.objects" />
+          <option value="el_galleria.models.Galleria.objects" />
+          <option value="el_galleria.models.Galleria.id" />
+          <option value="base.models.Room.objects" />
+          <option value="insta.models.User.objects" />
+          <option value="insta.models.Profile.objects" />
+          <option value="insta.models.Post.objects" />
+          <option value="insta.models.LocalUser.objects" />
+          <option value="insta.models.Profile.bojects" />
+          <option value="awardsapp.models.Rating.objects" />
+          <option value="awardsapp.models.AvgRating.objects" />
+          <option value="awardsapp.models.Project.objects" />
+          <option value="awardsapp.models.Profile.objects" />
+          <option value="hood.models.Neighborhood.objects" />
+          <option value="hood.models.Profile.objects" />
+          <option value="hood.models.Member.objects" />
+          <option value="hood.models.Post.objects" />
+          <option value="hood.models.Business.objects" />
+          <option value="backend.products.models.Product.objects" />
+          <option value="backendapp.models.User.objects" />
+          <option value="rest_framework.authtoken.models.Token.objects" />
+          <option value="backendapp.models.Request.objects" />
+          <option value="backendapp.models.RegUser.objects" />
+          <option value="type.with_ui" />
+          <option value="backendapp.models.Mover.objects" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
