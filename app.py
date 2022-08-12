@@ -312,7 +312,6 @@ def show_artist(artist_id):
 def edit_artist(artist_id):
     form = ArtistForm()
     artist = Artist.query.get(artist_id)
-    print(f"The artist {artist}")
     if artist:
         # if we get an item with the id passed int the route then we can make an attempt to process it
         return render_template('forms/edit_artist.html', form=form, artist=artist)
