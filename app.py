@@ -153,7 +153,7 @@ def show_venue(venue_id):
     ODO: replace with real venue data from the venues table, using venue_id
     '''
     current_date = format_datetime(str(datetime.today()))
-    past_shows = Show.query.filter(Show.start_time <= current_date).all()
+    past_shows = Show.query.filter(Show.venue_id == venue_id).filter(Show.start_time <= current_date).all()
     upcoming_shows = Show.query.filter(Show.venue_id == venue_id).filter(Show.start_time <= current_date).all()
     # data = list(filter(lambda d: d['id'] == venue_id, [data1, data2, data3]))[0]
     data = Venue.query.filter_by(id=venue_id).first()
@@ -279,7 +279,7 @@ def search_artists():
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
     # shows the artist page with the given artist_id
-    # TODO: replace with real artist data from the artist table, using artist_id
+    # ODO: replace with real artist data from the artist table, using artist_id
     current_date = format_datetime(str(datetime.today()))
     past_shows = Show.query.filter(Show.artist_id == artist_id).filter(Show.start_time <= current_date).all()
     upcoming_shows = Show.query.filter(Show.artist_id == artist_id).filter(Show.start_time <= current_date).all()
@@ -311,28 +311,57 @@ def show_artist(artist_id):
 @app.route('/artists/<int:artist_id>/edit', methods=['GET'])
 def edit_artist(artist_id):
     form = ArtistForm()
-    artist = {
-        "id": 4,
-        "name": "Guns N Petals",
-        "genres": ["Rock n Roll"],
-        "city": "San Francisco",
-        "state": "CA",
-        "phone": "326-123-5000",
-        "website": "https://www.gunsnpetalsband.com",
-        "facebook_link": "https://www.facebook.com/GunsNPetals",
-        "seeking_venue": True,
-        "seeking_description": "Looking for shows to perform at in the San Francisco Bay Area!",
-        "image_link": "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80"
-    }
-    # TODO: populate form with fields from artist with ID <artist_id>
-    return render_template('forms/edit_artist.html', form=form, artist=artist)
+    artist = Artist.query.get(artist_id)
+    if artist:
+        # if we get an item with the id passed int the route then we can make an attempt to process it
+        return render_template('forms/edit_artist.html', form=form, artist=artist)
+    else:
+        flash("The artist doesn't exist")
+        return redirect(url_for('index'))
 
 
 @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
 def edit_artist_submission(artist_id):
     # TODO: take values from the form submitted, and update existing
     # artist record with ID <artist_id> using the new attributes
+    artist = Artist.query.get(artist_id)
+    if artist:
+        # if we get an item with the id passed int the route then we can make an attempt to process it
+        try:
+            genres = request.form.get('genres')
+            name = request.form.get('name')
+            city = request.form.get('city')
+            state = request.form.get('state')
+            phone = request.form.get('phone')
+            image_link = request.form.get('image_link')
+            facebook_link = request.form.get('facebook_link')
+            website_link = request.form.get('website_link')
+            seeking_venue = request.form.get('seeking_venue')
+            seeking_description = request.form.get('seeking_description')
 
+            # converting the seeking_venue str val to a bool
+            if seeking_venue == 'y':
+                seeking_venue = True
+            else:
+                seeking_venue = False
+            # add the data to the server
+            artist_item = Artist(genres=genres, name=name, city=city, state=state, phone=phone, image_link=image_link,
+                                 facebook_link=facebook_link, website_link=website_link, seeking_venues=seeking_venue,
+                                 seeking_description=seeking_description)
+            db.session.add(artist_item)
+            db.session.commit()
+            # on successful db insert, flash success
+            flash('Artist ' + request.form['name'] + ' was successfully listed!')
+        except:
+            print(sys.exc_info())
+            db.session.rollback()
+            # on successful db insert, flash success
+            flash('An error occurred. Artist ' + request.form.get('name') + ' could not be listed.')
+        finally:
+            db.session.close()
+        return redirect(url_for('index'))
+    else:
+        db.session.close()
     return redirect(url_for('show_artist', artist_id=artist_id))
 
 
