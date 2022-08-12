@@ -42,7 +42,7 @@ class Venue(db.Model):
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
     website_link = db.Column(db.String(120))
-    seeking_talent = db.Column(db.Boolean, default=False, nullable=False)
+    seeking_talent = db.Column(db.Boolean, nullable=False)
     seeking_description = db.Column(db.String(250))
     genres = db.Column(db.String(), nullable=False)
     # shows = db.relationship('Show', backref='Venue', lazy=True)
@@ -61,7 +61,7 @@ class Artist(db.Model):
     facebook_link = db.Column(db.String(120))
     website_link = db.Column(db.String(120))
     seeking_description = db.Column(db.String())
-    seeking_venues = db.Column(db.Boolean, default=False, nullable=False)
+    seeking_venues = db.Column(db.Boolean, nullable=False)
     # shows = db.relationship('Show', backref='Artist', lazy=True)
 
     '''# TODO: implement any missing fields, as a database migration using Flask-Migrate'''
@@ -312,6 +312,7 @@ def show_artist(artist_id):
 def edit_artist(artist_id):
     form = ArtistForm()
     artist = Artist.query.get(artist_id)
+    print(f"The artist {artist}")
     if artist:
         # if we get an item with the id passed int the route then we can make an attempt to process it
         return render_template('forms/edit_artist.html', form=form, artist=artist)
@@ -324,38 +325,33 @@ def edit_artist(artist_id):
 def edit_artist_submission(artist_id):
     # ODO: take values from the form submitted, and update existing
     # artist record with ID <artist_id> using the new attributes
-
+    artist = Artist.query.get(artist_id)
     try:
-        genres = request.form.get('genres')
-        name = request.form.get('name')
-        city = request.form.get('city')
-        state = request.form.get('state')
-        phone = request.form.get('phone')
-        image_link = request.form.get('image_link')
-        facebook_link = request.form.get('facebook_link')
-        website_link = request.form.get('website_link')
+        artist.genres = request.form.get('genres')
+        artist.name = request.form.get('name')
+        artist.city = request.form.get('city')
+        artist.state = request.form.get('state')
+        artist.phone = request.form.get('phone')
+        artist.image_link = request.form.get('image_link')
+        artist.facebook_link = request.form.get('facebook_link')
+        artist.website_link = request.form.get('website_link')
         seeking_venue = request.form.get('seeking_venue')
-        seeking_description = request.form.get('seeking_description')
+        artist.seeking_description = request.form.get('seeking_description')
 
         # converting the seeking_venue str val to a bool
         if seeking_venue == 'y':
-            seeking_venue = True
+            artist.seeking_venue = True
         else:
-            seeking_venue = False
-        # add the data to the server
-        artist_item = Artist(id=artist_id, genres=genres, name=name, city=city, state=state, phone=phone,
-                             image_link=image_link,
-                             facebook_link=facebook_link, website_link=website_link, seeking_venues=seeking_venue,
-                             seeking_description=seeking_description)
-        db.session.add(artist_item)
+            artist.seeking_venue = False
+
         db.session.commit()
         # on successful db insert, flash success
-        flash('Artist ' + request.form['name'] + ' was successfully listed!')
+        flash('Artist ' + request.form['name'] + ' was successfully updated!')
     except:
         print(sys.exc_info())
         db.session.rollback()
         # on successful db insert, flash success
-        flash('An error occurred. Artist ' + request.form.get('name') + ' could not be listed.')
+        flash('An error occurred. Artist ' + request.form.get('name') + ' could not be updated.')
     finally:
         db.session.close()
     return redirect(url_for('show_artist', artist_id=artist_id))
@@ -376,8 +372,38 @@ def edit_venue(venue_id):
 
 @app.route('/venues/<int:venue_id>/edit', methods=['POST'])
 def edit_venue_submission(venue_id):
-    # TODO: take values from the form submitted, and update existing
+    # ODO: take values from the form submitted, and update existing
+    venue = Venue.query.get(venue_id)
     # venue record with ID <venue_id> using the new attributes
+    try:
+        venue.genres = request.form.get('genres')
+        venue.name = request.form.get('name')
+        venue.city = request.form.get('city')
+        venue.state = request.form.get('state')
+        venue.address = request.form.get('address')
+        venue.phone = request.form.get('phone')
+        venue.image_link = request.form.get('image_link')
+        venue.facebook_link = request.form.get('facebook_link')
+        venue.website_link = request.form.get('website_link')
+        seeking_talent = request.form.get('seeking_talent')
+        venue.seeking_description = request.form.get('seeking_description')
+
+        # converting the seeking_venue str val to a bool
+        if seeking_talent == 'y':
+            venue.seeking_talent = True
+        else:
+            venue.seeking_talent = False
+        # add the data to the server
+        db.session.commit()
+        # on successful db insert, flash success
+        flash('Venue ' + request.form['name'] + ' was successfully updated!')
+    except:
+        print(sys.exc_info())
+        db.session.rollback()
+        # on successful db insert, flash success
+        flash('An error occurred. Venue ' + request.form.get('name') + ' could not be updated.')
+    finally:
+        db.session.close()
     return redirect(url_for('show_venue', venue_id=venue_id))
 
 
@@ -419,12 +445,12 @@ def create_artist_submission():
         db.session.add(artist_item)
         db.session.commit()
         # on successful db insert, flash success
-        flash('Artist ' + request.form['name'] + ' was successfully listed!')
+        flash('Artist ' + request.form['name'] + ' was successfully added!')
     except:
         print(sys.exc_info())
         db.session.rollback()
         # on successful db insert, flash success
-        flash('An error occurred. Artist ' + request.form.get('name') + ' could not be listed.')
+        flash('An error occurred. Artist ' + request.form.get('name') + ' could not be added.')
     finally:
         db.session.close()
 
