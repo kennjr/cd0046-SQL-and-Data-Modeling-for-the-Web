@@ -13,7 +13,7 @@ class ShowForm(Form):
     start_time = DateTimeField(
         'start_time',
         validators=[DataRequired()],
-        default= datetime.today()
+        default=datetime.today()
     )
 
 class VenueForm(Form):
@@ -120,7 +120,7 @@ class VenueForm(Form):
         'website_link'
     )
 
-    seeking_talent = BooleanField( 'seeking_talent' )
+    seeking_talent = BooleanField('seeking_talent')
 
     seeking_description = StringField(
         'seeking_description'
@@ -231,7 +231,7 @@ class ArtistForm(Form):
         'website_link'
      )
 
-    seeking_venue = BooleanField( 'seeking_venue' )
+    seeking_venue = BooleanField('seeking_venue')
 
     seeking_description = StringField(
             'seeking_description'
