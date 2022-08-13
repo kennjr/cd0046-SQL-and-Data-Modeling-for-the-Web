@@ -72,6 +72,9 @@ class Show(db.Model):
     artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), nullable=False)
     venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=False)
     start_time = db.Column(db.DateTime(timezone=True), nullable=False)
+    artist_image_link = db.Column(db.String(), nullable=True)
+    artist_name = db.Column(db.String())
+    venue_name = db.Column(db.String())
 
 
 '''# TODO Implement Show and Artist models, and complete all model relationships and properties, as a database 
@@ -106,6 +109,7 @@ def index():
 #  ----------------------------------------------------------------
 # the method. below returns an obj if there's one with a matching key and value in the specified array
 def get_object(key, val, lis):
+    # from gh
     return next((i for i, d in enumerate(lis) if d[key] == val), None)
 
 
@@ -462,7 +466,8 @@ def create_artist_submission():
 @app.route('/shows')
 def shows():
     # displays list of shows at /shows
-    # TODO: replace with real venues data.
+    # ODO: replace with real venues data.
+
     data = [{
         "venue_id": 1,
         "venue_name": "The Musical Hop",
@@ -499,6 +504,10 @@ def shows():
         "artist_image_link": "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80",
         "start_time": "2035-04-15T20:00:00.000Z"
     }]
+    data = Show.query.all()
+    for show in data:
+        if show.start_time:
+            show.start_time = str(show.start_time)
     return render_template('pages/shows.html', shows=data)
 
 
@@ -512,13 +521,31 @@ def create_shows():
 @app.route('/shows/create', methods=['POST'])
 def create_show_submission():
     # called to create new shows in the db, upon submitting new show listing form
-    # TODO: insert form data as a new Show record in the db, instead
+    # ODO: insert form data as a new Show record in the db, instead
+    try:
+        artist_id = request.form.get('artist_id')
+        artist = Artist.query.get(artist_id)
+        venue_id = request.form.get('venue_id')
+        venue = Venue.query.get(venue_id)
+        start_time = request.form.get('start_time')
 
-    # on successful db insert, flash success
-    flash('Show was successfully listed!')
-    # TODO: on unsuccessful db insert, flash an error instead.
-    # e.g., flash('An error occurred. Show could not be listed.')
-    # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+        if artist and venue:
+            # add the data to the server
+            show_item = Show(artist_id=artist_id, venue_id=venue_id, start_time=start_time, venue_name=venue.name,
+                             artist_name=artist.name, artist_image_link=artist.image_link)
+            db.session.add(show_item)
+            db.session.commit()
+            # on successful db insert, flash success
+            flash('Show was successfully listed!')
+            print("The show was created")
+        else:
+            flash("The artist or the venue doesn't exist")
+    except:
+        db.session.rollback()
+        print("The show was not created")
+        flash('An error occurred. Show could not be listed.')
+    finally:
+        db.session.close()
     return render_template('pages/home.html')
 
 
