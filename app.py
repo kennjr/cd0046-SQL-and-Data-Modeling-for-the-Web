@@ -45,7 +45,7 @@ class Venue(db.Model):
     seeking_talent = db.Column(db.Boolean, nullable=False)
     seeking_description = db.Column(db.String(250))
     genres = db.Column(db.String(), nullable=False)
-    # shows = db.relationship('Show', backref='Venue', lazy=True)
+    shows = db.relationship('Show', backref='Venue', cascade="all, delete-orphan", lazy=True)
 
 
 class Artist(db.Model):
@@ -62,7 +62,7 @@ class Artist(db.Model):
     website_link = db.Column(db.String(120))
     seeking_description = db.Column(db.String())
     seeking_venues = db.Column(db.Boolean, nullable=False)
-    # shows = db.relationship('Show', backref='Artist', lazy=True)
+    shows = db.relationship('Show', backref='Artist', cascade="all, delete-orphan", lazy=True)
 
     '''# TODO: implement any missing fields, as a database migration using Flask-Migrate'''
 class Show(db.Model):
@@ -163,7 +163,6 @@ def show_venue(venue_id):
     # the filter order is important (it enhances the performance)
     past_shows = Show.query.filter(Show.venue_id == venue_id).filter(Show.start_time <= current_date).all()
     upcoming_shows = Show.query.filter(Show.venue_id == venue_id).filter(Show.start_time >= current_date).all()
-    # data = list(filter(lambda d: d['id'] == venue_id, [data1, data2, data3]))[0]
     data = Venue.query.filter_by(id=venue_id).first()
     response = {
         "id": data.id,
@@ -212,6 +211,12 @@ def create_venue_submission():
         seeking_talent = request.form.get('seeking_talent')
         seeking_description = request.form.get('seeking_description')
 
+        # the if changes the val of the var from a str to a bool
+        if seeking_talent == 'y':
+            seeking_talent = True
+        else:
+            seeking_talent = False
+
         # add the data to the server
         venue_item = Venue(genres=genres, name=name, city=city, state=state, address=address, phone=phone,
                            image_link=image_link, facebook_link=facebook_link, website_link=website_link,
@@ -222,8 +227,8 @@ def create_venue_submission():
         flash('Venue ' + request.form['name'] + ' was successfully listed!')
         print("The venue was created")
     except:
+        print(sys.exc_info())
         db.session.rollback()
-        print("The venue was not created")
         flash('An error occurred. Venue ' + request.form.get('name') + ' could not be listed.')
     finally:
         db.session.close()
@@ -239,11 +244,13 @@ def delete_venue(venue_id):
         deleted_venue = Venue.query.get(venue_id)
         db.session.delete(deleted_venue)
         db.session.commit()
+        flash("The venue was deleted successfully")
     except:
+        print(sys.exc_info())
         db.session.rollback()
+        flash("Unfortunately, the venue wasn't deleted successfully")
     finally:
         db.session.close()
-    # SQLAlchemy ORM to delete a record. Handle cases where the session commit could fail.
 
     # BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
     # clicking that button delete it from the db then redirect the user to the homepage
@@ -255,16 +262,6 @@ def delete_venue(venue_id):
 @app.route('/artists')
 def artists():
     """# ODO: replace with real data returned from querying the database"""
-    # data = [{
-    #     "id": 4,
-    #     "name": "Guns N Petals",
-    # }, {
-    #     "id": 5,
-    #     "name": "Matt Quevedo",
-    # }, {
-    #     "id": 6,
-    #     "name": "The Wild Sax Band",
-    # }]
     data = Artist.query.all()
     return render_template('pages/artists.html', artists=data)
 
@@ -334,26 +331,29 @@ def edit_artist_submission(artist_id):
     # artist record with ID <artist_id> using the new attributes
     artist = Artist.query.get(artist_id)
     try:
-        artist.genres = request.form.get('genres')
-        artist.name = request.form.get('name')
-        artist.city = request.form.get('city')
-        artist.state = request.form.get('state')
-        artist.phone = request.form.get('phone')
-        artist.image_link = request.form.get('image_link')
-        artist.facebook_link = request.form.get('facebook_link')
-        artist.website_link = request.form.get('website_link')
-        seeking_venue = request.form.get('seeking_venue')
-        artist.seeking_description = request.form.get('seeking_description')
+        if artist is not None:
+            artist.genres = request.form.get('genres')
+            artist.name = request.form.get('name')
+            artist.city = request.form.get('city')
+            artist.state = request.form.get('state')
+            artist.phone = request.form.get('phone')
+            artist.image_link = request.form.get('image_link')
+            artist.facebook_link = request.form.get('facebook_link')
+            artist.website_link = request.form.get('website_link')
+            seeking_venue = request.form.get('seeking_venue')
+            artist.seeking_description = request.form.get('seeking_description')
 
-        # converting the seeking_venue str val to a bool
-        if seeking_venue == 'y':
-            artist.seeking_venue = True
+            # converting the seeking_venue str val to a bool
+            if seeking_venue == 'y':
+                artist.seeking_venue = True
+            else:
+                artist.seeking_venue = False
+
+            db.session.commit()
+            # on successful db insert, flash success
+            flash('Artist ' + request.form['name'] + ' was successfully updated!')
         else:
-            artist.seeking_venue = False
-
-        db.session.commit()
-        # on successful db insert, flash success
-        flash('Artist ' + request.form['name'] + ' was successfully updated!')
+            flash("The artist doesn't exist")
     except:
         print(sys.exc_info())
         db.session.rollback()
@@ -502,12 +502,10 @@ def create_show_submission():
             db.session.commit()
             # on successful db insert, flash success
             flash('Show was successfully listed!')
-            print("The show was created")
         else:
             flash("The artist or the venue doesn't exist")
     except:
         db.session.rollback()
-        print("The show was not created")
         flash('An error occurred. Show could not be listed.')
     finally:
         db.session.close()
