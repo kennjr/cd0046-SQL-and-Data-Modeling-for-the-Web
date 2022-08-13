@@ -22,6 +22,7 @@ moment = Moment(app)
 app.config.from_object('config')
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+from models import Venue, Show, Artist
 
 '''# TODO: connect to a local postgresql database'''
 
@@ -30,51 +31,8 @@ migrate = Migrate(app, db)
 # Models.
 # ----------------------------------------------------------------------------#
 
-class Venue(db.Model):
-    __tablename__ = 'Venue'
 
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
-    address = db.Column(db.String(120))
-    phone = db.Column(db.String(120))
-    image_link = db.Column(db.String(500))
-    facebook_link = db.Column(db.String(120))
-    website_link = db.Column(db.String(120))
-    seeking_talent = db.Column(db.Boolean, nullable=False)
-    seeking_description = db.Column(db.String(250))
-    genres = db.Column(db.String(), nullable=False)
-    shows = db.relationship('Show', backref='Venue', cascade="all, delete-orphan", lazy=True)
-
-
-class Artist(db.Model):
-    __tablename__ = 'Artist'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
-    phone = db.Column(db.String(120))
-    genres = db.Column(db.String(120))
-    image_link = db.Column(db.String(500))
-    facebook_link = db.Column(db.String(120))
-    website_link = db.Column(db.String(120))
-    seeking_description = db.Column(db.String())
-    seeking_venues = db.Column(db.Boolean, nullable=False)
-    shows = db.relationship('Show', backref='Artist', cascade="all, delete-orphan", lazy=True)
-
-    '''# TODO: implement any missing fields, as a database migration using Flask-Migrate'''
-class Show(db.Model):
-    __tablename__ = "Shows"
-
-    id = db.Column(db.Integer, primary_key=True)
-    artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), nullable=False)
-    venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=False)
-    start_time = db.Column(db.DateTime(timezone=True), nullable=False)
-    artist_image_link = db.Column(db.String(), nullable=True)
-    artist_name = db.Column(db.String())
-    venue_name = db.Column(db.String())
+'''# TODO: implement any missing fields, as a database migration using Flask-Migrate'''
 
 
 '''# TODO Implement Show and Artist models, and complete all model relationships and properties, as a database 
@@ -161,8 +119,12 @@ def show_venue(venue_id):
     '''
     current_date = format_datetime(str(datetime.today()))
     # the filter order is important (it enhances the performance)
-    past_shows = Show.query.filter(Show.venue_id == venue_id).filter(Show.start_time <= current_date).all()
-    upcoming_shows = Show.query.filter(Show.venue_id == venue_id).filter(Show.start_time >= current_date).all()
+    # past_shows = Show.query.filter(Show.venue_id == venue_id).filter(Show.start_time <= current_date).all()
+    # upcoming_shows = Show.query.filter(Show.venue_id == venue_id).filter(Show.start_time >= current_date).all()
+
+    past_shows = db.session.query(Show).join(Venue).filter(Show.venue_id == venue_id).filter(Show.start_time < datetime.now()).all()
+    upcoming_shows = db.session.query(Show).join(Venue).filter(Show.venue_id == venue_id).filter(Show.start_time > current_date).all()
+
     data = Venue.query.filter_by(id=venue_id).first()
     response = {
         "id": data.id,
@@ -286,8 +248,12 @@ def show_artist(artist_id):
     # shows the artist page with the given artist_id
     # ODO: replace with real artist data from the artist table, using artist_id
     current_date = format_datetime(str(datetime.today()))
-    past_shows = Show.query.filter(Show.artist_id == artist_id).filter(Show.start_time <= current_date).all()
-    upcoming_shows = Show.query.filter(Show.artist_id == artist_id).filter(Show.start_time >= current_date).all()
+    # past_shows = Show.query.filter(Show.artist_id == artist_id).filter(Show.start_time <= current_date).all()
+    # upcoming_shows = Show.query.filter(Show.artist_id == artist_id).filter(Show.start_time >= current_date).all()
+
+    past_shows = db.session.query(Show).join(Venue).filter(Show.artist_id == artist_id).filter(Show.start_time < datetime.now()).all()
+    upcoming_shows = db.session.query(Show).join(Venue).filter(Show.artist_id == artist_id).filter(Show.start_time > current_date).all()
+
     # data = list(filter(lambda d: d['id'] == venue_id, [data1, data2, data3]))[0]
     data = Artist.query.filter_by(id=artist_id).first()
     response = {
