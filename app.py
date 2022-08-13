@@ -118,19 +118,22 @@ def venues():
     venues_list = Venue.query.group_by(Venue.city, Venue.state, Venue.id).all()
     data_array = []
     for venue in venues_list:
-        venue_city = venue.city
+        # getting the index of the current venue's city,
+        # so that we can added the venue to the correct obj(if it exists) in the array
         city_index = get_object("city", venue.city, data_array)
         if city_index is not None:
             city = data_array[city_index]
+            # adding the venue to the venues array of the city
             city['venues'].append(venue)
         else:
-            data_array.append({"city": venue_city,
+            # if city doesn't exist then we create it
+            data_array.append({"city": venue.city,
                                "state": venue.state, "venues": [venue]})
-        print("The outer loop runs")
+
         # if any(obj['city'] == venue_city for obj, k in data_array):
 
 
-    ''' # TODO: replace with real venues data num_upcoming_shows should be aggregated based on number of upcoming shows per venue.'''
+    '''# TODO: replace with real venues data num_upcoming_shows should be aggregated based on number of upcoming shows per venue.'''
     return render_template('pages/venues.html', areas=data_array)
 
 
@@ -157,6 +160,7 @@ def show_venue(venue_id):
     ODO: replace with real venue data from the venues table, using venue_id
     '''
     current_date = format_datetime(str(datetime.today()))
+    # the filter order is important (it enhances the performance)
     past_shows = Show.query.filter(Show.venue_id == venue_id).filter(Show.start_time <= current_date).all()
     upcoming_shows = Show.query.filter(Show.venue_id == venue_id).filter(Show.start_time >= current_date).all()
     # data = list(filter(lambda d: d['id'] == venue_id, [data1, data2, data3]))[0]
@@ -228,7 +232,7 @@ def create_venue_submission():
     return render_template('pages/home.html')
 
 
-@app.route('/venues/<venue_id>', methods=['DELETE'])
+@app.route('/venues/<venue_id>/delete')
 def delete_venue(venue_id):
     '''# ODO: Complete this endpoint for taking a venue_id, and using'''
     try:
