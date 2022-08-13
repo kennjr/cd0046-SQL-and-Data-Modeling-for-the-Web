@@ -85,7 +85,7 @@ migration. '''
 # ----------------------------------------------------------------------------#
 
 def format_datetime(value, format='medium'):
-    date = dateutil.parser.parse(value)
+    date = dateutil.parser.parse(str(value))
     if format == 'full':
         format = "EEEE MMMM, d, y 'at' h:mma"
     elif format == 'medium':
@@ -158,7 +158,7 @@ def show_venue(venue_id):
     '''
     current_date = format_datetime(str(datetime.today()))
     past_shows = Show.query.filter(Show.venue_id == venue_id).filter(Show.start_time <= current_date).all()
-    upcoming_shows = Show.query.filter(Show.venue_id == venue_id).filter(Show.start_time <= current_date).all()
+    upcoming_shows = Show.query.filter(Show.venue_id == venue_id).filter(Show.start_time >= current_date).all()
     # data = list(filter(lambda d: d['id'] == venue_id, [data1, data2, data3]))[0]
     data = Venue.query.filter_by(id=venue_id).first()
     response = {
@@ -286,7 +286,7 @@ def show_artist(artist_id):
     # ODO: replace with real artist data from the artist table, using artist_id
     current_date = format_datetime(str(datetime.today()))
     past_shows = Show.query.filter(Show.artist_id == artist_id).filter(Show.start_time <= current_date).all()
-    upcoming_shows = Show.query.filter(Show.artist_id == artist_id).filter(Show.start_time <= current_date).all()
+    upcoming_shows = Show.query.filter(Show.artist_id == artist_id).filter(Show.start_time >= current_date).all()
     # data = list(filter(lambda d: d['id'] == venue_id, [data1, data2, data3]))[0]
     data = Artist.query.filter_by(id=artist_id).first()
     response = {
@@ -468,46 +468,7 @@ def shows():
     # displays list of shows at /shows
     # ODO: replace with real venues data.
 
-    data = [{
-        "venue_id": 1,
-        "venue_name": "The Musical Hop",
-        "artist_id": 4,
-        "artist_name": "Guns N Petals",
-        "artist_image_link": "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80",
-        "start_time": "2019-05-21T21:30:00.000Z"
-    }, {
-        "venue_id": 3,
-        "venue_name": "Park Square Live Music & Coffee",
-        "artist_id": 5,
-        "artist_name": "Matt Quevedo",
-        "artist_image_link": "https://images.unsplash.com/photo-1495223153807-b916f75de8c5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=334&q=80",
-        "start_time": "2019-06-15T23:00:00.000Z"
-    }, {
-        "venue_id": 3,
-        "venue_name": "Park Square Live Music & Coffee",
-        "artist_id": 6,
-        "artist_name": "The Wild Sax Band",
-        "artist_image_link": "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80",
-        "start_time": "2035-04-01T20:00:00.000Z"
-    }, {
-        "venue_id": 3,
-        "venue_name": "Park Square Live Music & Coffee",
-        "artist_id": 6,
-        "artist_name": "The Wild Sax Band",
-        "artist_image_link": "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80",
-        "start_time": "2035-04-08T20:00:00.000Z"
-    }, {
-        "venue_id": 3,
-        "venue_name": "Park Square Live Music & Coffee",
-        "artist_id": 6,
-        "artist_name": "The Wild Sax Band",
-        "artist_image_link": "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80",
-        "start_time": "2035-04-15T20:00:00.000Z"
-    }]
     data = Show.query.all()
-    for show in data:
-        if show.start_time:
-            show.start_time = str(show.start_time)
     return render_template('pages/shows.html', shows=data)
 
 
@@ -531,7 +492,7 @@ def create_show_submission():
 
         if artist and venue:
             # add the data to the server
-            show_item = Show(artist_id=artist_id, venue_id=venue_id, start_time=start_time, venue_name=venue.name,
+            show_item = Show(artist_id=artist_id, venue_id=venue_id, start_time=format_datetime(start_time), venue_name=venue.name,
                              artist_name=artist.name, artist_image_link=artist.image_link)
             db.session.add(show_item)
             db.session.commit()
