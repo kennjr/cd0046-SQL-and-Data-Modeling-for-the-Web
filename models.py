@@ -16,7 +16,7 @@ class Venue(db.Model):
     seeking_talent = db.Column(db.Boolean, nullable=False)
     seeking_description = db.Column(db.String(250))
     genres = db.Column(db.String(), nullable=False)
-    shows = db.relationship('Show', backref='Venue', cascade="all, delete-orphan", lazy=True)
+    # shows = db.relationship('Show', backref='Venue', cascade="all, delete-orphan", lazy=True)
 
 
 class Artist(db.Model):
@@ -33,7 +33,7 @@ class Artist(db.Model):
     website_link = db.Column(db.String(120))
     seeking_description = db.Column(db.String())
     seeking_venues = db.Column(db.Boolean, nullable=False)
-    shows = db.relationship('Show', backref='Artist', cascade="all, delete-orphan", lazy=True)
+    # shows = db.relationship('Show', backref='Artist', cascade="all, delete-orphan", lazy=True)
 
 
 class Show(db.Model):
